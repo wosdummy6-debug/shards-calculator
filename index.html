@@ -50,6 +50,18 @@ input {
 .bad input {
   border-color: #ff6b6b;
 }
+button {
+  margin-top: 12px;
+  padding: 8px 14px;
+  background: #1a2238;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #e7eefc;
+  border-radius: 8px;
+  cursor: pointer;
+}
+button:hover {
+  border-color: #2aa3ff;
+}
 </style>
 </head>
 
@@ -71,20 +83,20 @@ input {
     </thead>
     <tbody id="tbody"></tbody>
   </table>
+
+  <button id="resetBtn">Reset</button>
 </div>
 
 <script>
-// ===== SKILL DATA =====
 const skills = [
   {
     name: "Flame Strike (fc shards)",
     fc:   [0,16,25,41,68,102,0,0,0,0,0,0,0],
     iron: [0,10,12,14,16,18,20,22,24,26,28,30,32]
   }
-  // weitere Skills kannst du hier einfach kopieren & einfügen
+  // weitere Skills kannst du hier ergänzen
 ];
 
-// ===== HELPERS =====
 function clamp(v) {
   if (v === "") return "";
   v = Number(v);
@@ -102,7 +114,6 @@ function sumBetween(arr, cur, tgt) {
   return s;
 }
 
-// ===== RENDER =====
 const tbody = document.getElementById("tbody");
 
 skills.forEach(skill => {
@@ -118,7 +129,6 @@ skills.forEach(skill => {
   tbody.appendChild(tr);
 });
 
-// ===== CALCULATION =====
 function recalc() {
   [...tbody.rows].forEach((row, i) => {
     const skill = skills[i];
@@ -144,6 +154,11 @@ function recalc() {
 }
 
 tbody.addEventListener("input", recalc);
+
+document.getElementById("resetBtn").addEventListener("click", () => {
+  document.querySelectorAll("input").forEach(i => i.value = "");
+  recalc();
+});
 </script>
 
 </body>
