@@ -1,120 +1,150 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>FC Shards + Iron Calculator</title>
-  <style>
-    body { font-family: Arial, sans-serif; background:#0b1220; color:#e7eefc; margin:0; }
-    .wrap { max-width:1100px; margin:30px auto; padding:18px; }
-    h1 { margin:0 0 8px 0; }
-    p { margin: 6px 0 14px; color:#9fb0d0; }
-    table { width:100%; border-collapse:collapse; }
-    th, td { border:1px solid rgba(255,255,255,.12); padding:10px; }
-    th { background:#1a2238; text-align:left; }
-    input { width:80px; padding:6px 8px; background:#0d1628; border:1px solid rgba(255,255,255,.18); color:#e7eefc; border-radius:8px; }
-    .num { font-variant-numeric: tabular-nums; }
-    .bad input { border-color: rgba(255,107,107,.9); box-shadow: 0 0 0 3px rgba(255,107,107,.15); }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FC Shards + Iron Calculator</title>
+
+<style>
+body {
+  font-family: Arial, sans-serif;
+  background: #0b1220;
+  color: #e7eefc;
+  margin: 0;
+}
+.wrap {
+  max-width: 1100px;
+  margin: 30px auto;
+  padding: 20px;
+}
+h1 {
+  margin: 0 0 10px 0;
+}
+p {
+  color: #9fb0d0;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+}
+th, td {
+  border: 1px solid rgba(255,255,255,0.15);
+  padding: 10px;
+  text-align: left;
+}
+th {
+  background: #1a2238;
+}
+input {
+  width: 80px;
+  padding: 6px;
+  background: #0d1628;
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #e7eefc;
+  border-radius: 6px;
+}
+.num {
+  font-variant-numeric: tabular-nums;
+}
+.bad input {
+  border-color: #ff6b6b;
+}
+</style>
 </head>
+
 <body>
-  <div class="wrap">
-    <h1>FC Shards + Iron Calculator</h1>
-    <p>Enter <b>Current</b> and <b>Target</b> (0–12). Iron is added automatically. (Current must be lower than Target.)</p>
+<div class="wrap">
+  <h1>FC Shards + Iron Calculator</h1>
+  <p>Enter <b>Current</b> and <b>Target</b> (0–12). Iron is added automatically.</p>
 
-    <table id="tbl">
-      <thead>
-        <tr>
-          <th style="width:42%">Skill (FC shards)</th>
-          <th style="width:12%">Current</th>
-          <th style="width:12%">Target</th>
-          <th style="width:12%">FC cost</th>
-          <th style="width:12%">Iron cost</th>
-          <th style="width:10%">Row total</th>
-        </tr>
-      </thead>
-      <tbody id="tbody"></tbody>
-    </table>
-  </div>
+  <table>
+    <thead>
+      <tr>
+        <th>Skill (FC shards)</th>
+        <th>Current</th>
+        <th>Target</th>
+        <th>FC</th>
+        <th>Iron</th>
+        <th>Row total</th>
+      </tr>
+    </thead>
+    <tbody id="tbody"></tbody>
+  </table>
+</div>
 
-  <script>
-    // Replace/extend this list with your real skills.
-    // Arrays are indexed by level (0..12). Value at [lv] = cost to upgrade to that level.
-    const skills = [
-      {
-        name: "Flame Strike (fc shards)",
-        fc:   [0, 16, 25, 41, 68, 102, 0, 0, 0, 0, 0, 0, 0],
-        iron: [0, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
-      }
-    ];
+<script>
+// ===== SKILL DATA =====
+const skills = [
+  {
+    name: "Flame Strike (fc shards)",
+    fc:   [0,16,25,41,68,102,0,0,0,0,0,0,0],
+    iron: [0,10,12,14,16,18,20,22,24,26,28,30,32]
+  }
+  // weitere Skills kannst du hier einfach kopieren & einfügen
+];
 
-    function clamp012(v) {
-      if (v === "" || v === null || v === undefined) return "";
-      const n = Number(v);
-      if (!Number.isFinite(n)) return "";
-      return Math.max(0, Math.min(12, Math.trunc(n)));
-    }
+// ===== HELPERS =====
+function clamp(v) {
+  if (v === "") return "";
+  v = Number(v);
+  if (!Number.isFinite(v)) return "";
+  return Math.max(0, Math.min(12, Math.trunc(v)));
+}
 
-    // sum from current -> target = levels (current+1 ... target)
-    function sumBetween(arr, current, target) {
-      if (!Number.isFinite(current) || !Number.isFinite(target)) return 0;
-      if (current >= target) return 0;
-      let s = 0;
-      for (let lv = current + 1; lv <= target; lv++) s += Number(arr[lv] ?? 0);
-      return s;
-    }
+function sumBetween(arr, cur, tgt) {
+  if (!Number.isFinite(cur) || !Number.isFinite(tgt)) return 0;
+  if (cur >= tgt) return 0;
+  let s = 0;
+  for (let i = cur + 1; i <= tgt; i++) {
+    s += arr[i] || 0;
+  }
+  return s;
+}
 
-    function fmt(n){ return (n || 0).toLocaleString(); }
+// ===== RENDER =====
+const tbody = document.getElementById("tbody");
 
-    const tbody = document.getElementById("tbody");
+skills.forEach(skill => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td><b>${skill.name}</b></td>
+    <td><input class="cur" type="number" min="0" max="12"></td>
+    <td><input class="tgt" type="number" min="0" max="12"></td>
+    <td class="num fc">0</td>
+    <td class="num iron">0</td>
+    <td class="num row">0</td>
+  `;
+  tbody.appendChild(tr);
+});
 
-    function render() {
-      tbody.innerHTML = "";
-      skills.forEach((sk) => {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td><b>${sk.name}</b></td>
-          <td><input class="cur" type="number" min="0" max="12" step="1" placeholder="0"></td>
-          <td><input class="tgt" type="number" min="0" max="12" step="1" placeholder="12"></td>
-          <td class="num fc">0</td>
-          <td class="num iron">0</td>
-          <td class="num row">0</td>
-        `;
-        tbody.appendChild(tr);
-      });
-    }
+// ===== CALCULATION =====
+function recalc() {
+  [...tbody.rows].forEach((row, i) => {
+    const skill = skills[i];
+    const curEl = row.querySelector(".cur");
+    const tgtEl = row.querySelector(".tgt");
 
-    function recalc() {
-      [...tbody.querySelectorAll("tr")].forEach((tr, i) => {
-        const sk = skills[i];
-        const curEl = tr.querySelector(".cur");
-        const tgtEl = tr.querySelector(".tgt");
+    curEl.value = clamp(curEl.value);
+    tgtEl.value = clamp(tgtEl.value);
 
-        curEl.value = clamp012(curEl.value);
-        tgtEl.value = clamp012(tgtEl.value);
+    const cur = Number(curEl.value);
+    const tgt = Number(tgtEl.value);
 
-        const cur = curEl.value === "" ? NaN : Number(curEl.value);
-        const tgt = tgtEl.value === "" ? NaN : Number(tgtEl.value);
+    const invalid = Number.isFinite(cur) && Number.isFinite(tgt) && cur >= tgt;
+    row.classList.toggle("bad", invalid);
 
-        const bad = Number.isFinite(cur) && Number.isFinite(tgt) && cur >= tgt;
-        tr.classList.toggle("bad", bad);
+    const fc = sumBetween(skill.fc, cur, tgt);
+    const iron = sumBetween(skill.iron, cur, tgt);
 
-        const fc = sumBetween(sk.fc, cur, tgt);
-        const iron = sumBetween(sk.iron, cur, tgt);
+    row.querySelector(".fc").textContent = fc;
+    row.querySelector(".iron").textContent = iron;
+    row.querySelector(".row").textContent = fc + iron;
+  });
+}
 
-        tr.querySelector(".fc").textContent = fmt(fc);
-        tr.querySelector(".iron").textContent = fmt(iron);
-        tr.querySelector(".row").textContent = fmt(fc + iron);
-      });
-    }
+tbody.addEventListener("input", recalc);
+</script>
 
-    // IMPORTANT: use 'input' listener on the tbody, works reliably
-    tbody.addEventListener("input", (e) => {
-      if (e.target.matches("input")) recalc();
-    });
-
-    render();
-    recalc();
-  </script>
 </body>
 </html>
