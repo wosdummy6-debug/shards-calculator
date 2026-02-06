@@ -5,186 +5,116 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>FC Shards + Iron Calculator</title>
   <style>
-    :root { --bg:#0b1220; --card:#121a2a; --text:#e7eefc; --muted:#9fb0d0; --accent:#2aa3ff; --bad:#ff6b6b; }
-    body { margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; background:linear-gradient(180deg,#081022,#0b1220); color:var(--text); }
-    .wrap { max-width: 1100px; margin: 28px auto; padding: 0 14px; }
-    .card { background: rgba(18,26,42,.92); border:1px solid rgba(255,255,255,.08); border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,.25); overflow:hidden; }
-    header { padding: 18px 18px 10px; display:flex; flex-wrap:wrap; gap:10px; align-items:end; justify-content:space-between; }
-    h1 { margin:0; font-size: 18px; letter-spacing:.2px; }
-    .hint { color:var(--muted); font-size: 13px; }
-    .hint b { color: var(--text); }
-    table { width:100%; border-collapse: collapse; }
-    th, td { padding: 10px 12px; border-top:1px solid rgba(255,255,255,.08); vertical-align: middle; }
-    th { text-align:left; font-size: 12px; letter-spacing:.5px; text-transform: uppercase; color: var(--muted); background: rgba(255,255,255,.03); }
-    .skill { font-weight: 600; }
-    input[type="number"]{
-      width: 92px; padding: 8px 10px; border-radius: 10px;
-      border:1px solid rgba(255,255,255,.12);
-      background:#0d1628; color:var(--text);
-      outline: none;
-    }
-    input[type="number"]:focus{ border-color: rgba(42,163,255,.8); box-shadow: 0 0 0 3px rgba(42,163,255,.18); }
-    .locked { color: var(--muted); font-variant-numeric: tabular-nums; }
-    .sum { font-variant-numeric: tabular-nums; }
-    .rowbad input { border-color: rgba(255,107,107,.65); box-shadow: 0 0 0 3px rgba(255,107,107,.12); }
-    .totals { display:flex; gap:12px; flex-wrap:wrap; padding: 14px 18px 18px; border-top:1px solid rgba(255,255,255,.08); }
-    .pill { background: rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius: 999px; padding: 10px 12px; }
-    .pill .k { color: var(--muted); font-size: 12px; }
-    .pill .v { font-weight: 800; font-size: 16px; font-variant-numeric: tabular-nums; }
-    .btn { margin-left:auto; cursor:pointer; border:1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.04);
-      color: var(--text); padding: 10px 12px; border-radius: 12px; }
-    .btn:hover { border-color: rgba(42,163,255,.55); }
-    .footer { padding: 0 18px 16px; color: var(--muted); font-size: 12px; }
-    .badge { display:inline-block; padding:2px 8px; border-radius:999px; font-size:12px; border:1px solid rgba(255,255,255,.12); color:var(--muted); }
+    body { font-family: Arial, sans-serif; background:#0b1220; color:#e7eefc; margin:0; }
+    .wrap { max-width:1100px; margin:30px auto; padding:18px; }
+    h1 { margin:0 0 8px 0; }
+    p { margin: 6px 0 14px; color:#9fb0d0; }
+    table { width:100%; border-collapse:collapse; }
+    th, td { border:1px solid rgba(255,255,255,.12); padding:10px; }
+    th { background:#1a2238; text-align:left; }
+    input { width:80px; padding:6px 8px; background:#0d1628; border:1px solid rgba(255,255,255,.18); color:#e7eefc; border-radius:8px; }
+    .num { font-variant-numeric: tabular-nums; }
+    .bad input { border-color: rgba(255,107,107,.9); box-shadow: 0 0 0 3px rgba(255,107,107,.15); }
   </style>
 </head>
 <body>
   <div class="wrap">
-    <div class="card">
-      <header>
-        <div>
-          <h1>FC Shards + Iron Calculator</h1>
-          <div class="hint">Enter <b>Current</b> and <b>Target</b> (0–12). Iron is added automatically.</div>
-          <div class="hint"><span class="badge">10 skills loaded</span></div>
-        </div>
-        <button class="btn" id="resetBtn" type="button">Reset inputs</button>
-      </header>
+    <h1>FC Shards + Iron Calculator</h1>
+    <p>Enter <b>Current</b> and <b>Target</b> (0–12). Iron is added automatically. (Current must be lower than Target.)</p>
 
-      <table>
-        <thead>
-          <tr>
-            <th style="width:42%">Skill (FC shards)</th>
-            <th style="width:12%">Current</th>
-            <th style="width:12%">Target</th>
-            <th style="width:12%">FC cost</th>
-            <th style="width:12%">Iron cost</th>
-            <th style="width:10%">Row total</th>
-          </tr>
-        </thead>
-        <tbody id="rows"></tbody>
-      </table>
-
-      <div class="totals">
-        <div class="pill">
-          <div class="k">Total FC</div>
-          <div class="v" id="totalFC">0</div>
-        </div>
-        <div class="pill">
-          <div class="k">Total Iron</div>
-          <div class="v" id="totalIron">0</div>
-        </div>
-        <div class="pill">
-          <div class="k">Grand Total</div>
-        </div>
-      </div>
-
-      <div class="footer">
-        This page was generated from your Excel. It runs fully offline (no server, no tracking).
-      </div>
-    </div>
+    <table id="tbl">
+      <thead>
+        <tr>
+          <th style="width:42%">Skill (FC shards)</th>
+          <th style="width:12%">Current</th>
+          <th style="width:12%">Target</th>
+          <th style="width:12%">FC cost</th>
+          <th style="width:12%">Iron cost</th>
+          <th style="width:10%">Row total</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
   </div>
 
-<script>
-const skills = [{"name": "Flame Squad (fc shards)", "fc": [0, 16, 25, 41, 68, 102, 0, 0, 0, 0, 0, 0, 0], "iron": [0, 5000, 8000, 13000, 21000, 33000, 0, 0, 0, 0, 0, 0, 0]}, {"name": "Flame Strike (fc shards)", "fc": [0, 40, 56, 74, 102, 136, 184, 248, 334, 0, 0, 0, 0], "iron": [0, 10000, 14000, 18000, 25000, 34000, 46000, 62000, 83000, 0, 0, 0, 0]}, {"name": "Flame Shield (fc shards)", "fc": [0, 40, 56, 74, 102, 136, 184, 248, 334, 0, 0, 0, 0], "iron": [0, 10000, 14000, 18000, 25000, 34000, 46000, 62000, 83000, 0, 0, 0, 0]}, {"name": "Flame Legion (fc shards)", "fc": [0, 83, 102, 125, 150, 184, 225, 276, 334, 418, 502, 602, 744], "iron": [0, 23000, 28000, 34000, 41000, 51000, 62000, 76000, 93000, 110000, 130000, 160000, 200000]}, {"name": "Flame Tomahawk (fc shards)", "fc": [0, 54, 66, 81, 97, 118, 145, 178, 216, 270, 324, 388, 480], "iron": [0, 15000, 18000, 22000, 27000, 33000, 40000, 49000, 60000, 75000, 90000, 100000, 130000]}, {"name": "Helios Protection (fc shards)", "fc": [0, 54, 66, 81, 97, 118, 145, 178, 216, 270, 324, 388, 480], "iron": [0, 15000, 18000, 22000, 27000, 33000, 40000, 49000, 60000, 75000, 90000, 100000, 130000]}, {"name": "Helios Troops (fc shards)", "fc": [0, 2236, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0], "iron": [0, 1000000, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]}, {"name": "Healing (fc shards)", "fc": [0, 102, 137, 188, 255, 341, 459, 612, 836, 1122, 1530, 0, 0], "iron": [0, 30000, 40000, 55000, 75000, 100000, 130000, 180000, 240000, 330000, 450000, 0, 0]}, {"name": "Training (fc shards)", "fc": [0, 102, 137, 188, 255, 341, 459, 612, 836, 1122, 1530, 0, 0], "iron": [0, 30000, 40000, 55000, 75000, 100000, 130000, 180000, 240000, 330000, 450000, 0, 0]}, {"name": "First Aid (fc shards)", "fc": [0, 51, 68, 94, 127, 170, 229, 306, 418, 561, 765, 0, 0], "iron": [0, 15000, 20000, 27000, 37000, 50000, 67000, 90000, 120000, 160000, 220000, 0, 0]}];
+  <script>
+    // Replace/extend this list with your real skills.
+    // Arrays are indexed by level (0..12). Value at [lv] = cost to upgrade to that level.
+    const skills = [
+      {
+        name: "Flame Strike (fc shards)",
+        fc:   [0, 16, 25, 41, 68, 102, 0, 0, 0, 0, 0, 0, 0],
+        iron: [0, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]
+      }
+    ];
 
-function sumBetween(costArr, current, target){
-  if (!Number.isFinite(current) || !Number.isFinite(target)) return 0;
-  if (current >= target) return 0;
-  let s = 0;
-  for (let lv = current + 1; lv <= target; lv++) s += Number(costArr[lv] ?? 0);
-  return s;
-}
+    function clamp012(v) {
+      if (v === "" || v === null || v === undefined) return "";
+      const n = Number(v);
+      if (!Number.isFinite(n)) return "";
+      return Math.max(0, Math.min(12, Math.trunc(n)));
+    }
 
-function fmt(n){ return (n || 0).toLocaleString(undefined); }
+    // sum from current -> target = levels (current+1 ... target)
+    function sumBetween(arr, current, target) {
+      if (!Number.isFinite(current) || !Number.isFinite(target)) return 0;
+      if (current >= target) return 0;
+      let s = 0;
+      for (let lv = current + 1; lv <= target; lv++) s += Number(arr[lv] ?? 0);
+      return s;
+    }
 
-const rowsEl = document.getElementById("rows");
-const totalFCEl = document.getElementById("totalFC");
-const totalIronEl = document.getElementById("totalIron");
-const grandTotalEl = document.getElementById("grandTotal");
+    function fmt(n){ return (n || 0).toLocaleString(); }
 
-function clamp012(v){
-  if (v === "" || v === null || v === undefined) return "";
-  const n = Number(v);
-  if (!Number.isFinite(n)) return "";
-  return Math.min(12, Math.max(0, Math.trunc(n)));
-}
+    const tbody = document.getElementById("tbody");
 
-function render(){
-  rowsEl.innerHTML = "";
-  skills.forEach((sk, idx) => {
-    const tr = document.createElement("tr");
-    tr.dataset.idx = idx;
-    tr.innerHTML = `
-      <td class="skill">${sk.name}</td>
-      <td><input inputmode="numeric" min="0" max="12" step="1" type="number" class="cur" placeholder="0"></td>
-      <td><input inputmode="numeric" min="0" max="12" step="1" type="number" class="tgt" placeholder="12"></td>
-      <td class="locked sum fc">0</td>
-      <td class="locked sum iron">0</td>
-      <td class="sum rowtotal">0</td>
-    `;
-    rowsEl.appendChild(tr);
-  });
+    function render() {
+      tbody.innerHTML = "";
+      skills.forEach((sk) => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><b>${sk.name}</b></td>
+          <td><input class="cur" type="number" min="0" max="12" step="1" placeholder="0"></td>
+          <td><input class="tgt" type="number" min="0" max="12" step="1" placeholder="12"></td>
+          <td class="num fc">0</td>
+          <td class="num iron">0</td>
+          <td class="num row">0</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
 
-  try {
-    const saved = JSON.parse(localStorage.getItem("fc_calc_state") || "{}");
-    [...rowsEl.querySelectorAll("tr")].forEach((tr, i) => {
-      const cur = tr.querySelector(".cur");
-      const tgt = tr.querySelector(".tgt");
-      if (saved[i]) { cur.value = saved[i].cur ?? ""; tgt.value = saved[i].tgt ?? ""; }
+    function recalc() {
+      [...tbody.querySelectorAll("tr")].forEach((tr, i) => {
+        const sk = skills[i];
+        const curEl = tr.querySelector(".cur");
+        const tgtEl = tr.querySelector(".tgt");
+
+        curEl.value = clamp012(curEl.value);
+        tgtEl.value = clamp012(tgtEl.value);
+
+        const cur = curEl.value === "" ? NaN : Number(curEl.value);
+        const tgt = tgtEl.value === "" ? NaN : Number(tgtEl.value);
+
+        const bad = Number.isFinite(cur) && Number.isFinite(tgt) && cur >= tgt;
+        tr.classList.toggle("bad", bad);
+
+        const fc = sumBetween(sk.fc, cur, tgt);
+        const iron = sumBetween(sk.iron, cur, tgt);
+
+        tr.querySelector(".fc").textContent = fmt(fc);
+        tr.querySelector(".iron").textContent = fmt(iron);
+        tr.querySelector(".row").textContent = fmt(fc + iron);
+      });
+    }
+
+    // IMPORTANT: use 'input' listener on the tbody, works reliably
+    tbody.addEventListener("input", (e) => {
+      if (e.target.matches("input")) recalc();
     });
-  } catch {}
 
-  recalcAll();
-}
-
-function recalcAll(){
-  let totalFC = 0, totalIron = 0;
-  const state = {};
-
-  [...rowsEl.querySelectorAll("tr")].forEach((tr, i) => {
-    const sk = skills[i];
-    const curEl = tr.querySelector(".cur");
-    const tgtEl = tr.querySelector(".tgt");
-
-    curEl.value = clamp012(curEl.value);
-    tgtEl.value = clamp012(tgtEl.value);
-
-    const cur = curEl.value === "" ? NaN : Number(curEl.value);
-    const tgt = tgtEl.value === "" ? NaN : Number(tgtEl.value);
-
-    const bad = Number.isFinite(cur) && Number.isFinite(tgt) && cur >= tgt;
-    tr.classList.toggle("rowbad", bad);
-
-    const fc = sumBetween(sk.fc, cur, tgt);
-    const iron = sumBetween(sk.iron, cur, tgt);
-    const rowTotal = fc + iron;
-
-    tr.querySelector(".fc").textContent = fmt(fc);
-    tr.querySelector(".iron").textContent = fmt(iron);
-    tr.querySelector(".rowtotal").textContent = fmt(rowTotal);
-
-    totalFC += fc;
-    totalIron += iron;
-
-    state[i] = { cur: curEl.value, tgt: tgtEl.value };
-  });
-
-  totalFCEl.textContent = fmt(totalFC);
-  totalIronEl.textContent = fmt(totalIron);
-  grandTotalEl.textContent = fmt(totalFC + totalIron);
-
-  try { localStorage.setItem("fc_calc_state", JSON.stringify(state)); } catch {}
-}
-
-rowsEl.addEventListener("input", (e) => { if (e.target.matches("input")) recalcAll(); });
-
-document.getElementById("resetBtn").addEventListener("click", () => {
-  [...rowsEl.querySelectorAll("input")].forEach(i => i.value = "");
-  try { localStorage.removeItem("fc_calc_state"); } catch {}
-  recalcAll();
-});
-
-render();
-</script>
+    render();
+    recalc();
+  </script>
 </body>
 </html>
